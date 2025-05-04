@@ -1,0 +1,13 @@
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+langchain>=0.1.0 # Base for Document object
+langchain-community>=0.0.20 # For UnstructuredFileLoader
+langchain-text-splitters>=0.0.1 # For RecursiveCharacterTextSplitter
+unstructured[local-inference]>=0.12.0 # Or specific parsers
+python-dotenv>=1.0.0
+timescale_vector>=0.1.0 # Your VectorStore dependency
+psycopg2-binary # Your VectorStore dependency
+ollama>=0.1.0 # Your VectorStore dependency for embeddings
+pandas>=1.5.0 # Required by your VectorStore.upsert and search result handling
+
+# Add dependencies needed by your config/settings.py if any
