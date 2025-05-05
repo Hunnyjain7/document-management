@@ -60,20 +60,6 @@ class VectorStore:
         """Drop the StreamingDiskANN index in the database"""
         self.vec_client.drop_embedding_index()
 
-    # def upsert(self, df: pd.DataFrame) -> None:
-    #     """
-    #     Insert or update records in the database from a pandas DataFrame.
-    #
-    #     Args:
-    #         df: A pandas DataFrame containing the data to insert or update.
-    #             Expected columns: id, metadata, contents, embedding
-    #     """
-    #     records = df.to_records(index=False)
-    #     self.vec_client.upsert(list(records))
-    #     logging.info(
-    #         f"Inserted {len(df)} records into {self.vector_settings.table_name}"
-    #     )
-
     def upsert(self, df: pd.DataFrame) -> None:
         """
         Insert or update records in the database from a pandas DataFrame.
@@ -132,7 +118,6 @@ class VectorStore:
             )
         except Exception as e:
             logging.error(f"vec_client.upsert failed: {e}", exc_info=True)
-            # Re-raise or handle as appropriate
             raise
 
     def search(
@@ -203,7 +188,6 @@ class VectorStore:
             search_args["uuid_time_filter"] = client.UUIDTimeRange(start_date, end_date)
 
         results = self.vec_client.search(query_embedding, **search_args)
-        print("results", results)
         if distance_threshold is not None:
             results = [result for result in results if result[-1] <= distance_threshold]
         elapsed_time = time.time() - start_time
@@ -301,15 +285,15 @@ class VectorStore:
         """
         results = []
         conn = None  # Initialize connection variable
-        cursor = None # Initialize cursor variable
+        cursor = None  # Initialize cursor variable
 
         # --- Use direct psycopg2 connection ---
         try:
             # Get connection string from settings used during __init__
             conn_string = self.settings.database.service_url
             if not conn_string:
-                 logging.error("VectorStore: Database service URL is not configured in settings.")
-                 raise ValueError("Database connection string is missing.")
+                logging.error("VectorStore: Database service URL is not configured in settings.")
+                raise ValueError("Database connection string is missing.")
 
             logging.debug(f"Connecting directly to database for distinct metadata query...")
             conn = psycopg2.connect(conn_string)
@@ -317,7 +301,7 @@ class VectorStore:
 
             # Assumes metadata is stored in a JSONB column named 'metadata'
             # Assumes table name is stored in self.vector_settings.table_name
-            table_name = self.vector_settings.table_name # Get table name from settings
+            table_name = self.vector_settings.table_name  # Get table name from settings
             query = f"""
                 SELECT DISTINCT metadata->>%s
                 FROM "{table_name}" -- Ensure table name is quoted if needed
@@ -325,17 +309,22 @@ class VectorStore:
                 ORDER BY 1;
             """
             logging.debug(f"Executing distinct metadata query: {query % (field_name, field_name)}")
-            cursor.execute(query, (field_name, field_name)) # Pass field_name as parameter twice
+            cursor.execute(query, (field_name, field_name))  # Pass field_name as parameter twice
             fetched_results = cursor.fetchall()
-            results = [row[0] for row in fetched_results] # Extract the first column
+            results = [row[0] for row in fetched_results]  # Extract the first column
 
-            logging.info(f"Found {len(results)} distinct values for metadata field '{field_name}' in table '{table_name}'")
+            logging.info(
+                f"Found {len(results)} distinct values for metadata field '{field_name}' in table '{table_name}'")
 
-        except psycopg2.Error as db_err: # Catch specific psycopg2 errors
-            logging.error(f"Database error fetching distinct metadata for '{field_name}' from table '{table_name}': {db_err}", exc_info=True)
+        except psycopg2.Error as db_err:  # Catch specific psycopg2 errors
+            logging.error(
+                f"Database error fetching distinct metadata for '{field_name}' from table '{table_name}': {db_err}",
+                exc_info=True)
             raise RuntimeError(f"Database error while fetching distinct metadata for '{field_name}'.") from db_err
         except Exception as e:
-            logging.error(f"Unexpected error fetching distinct metadata for '{field_name}' from table '{table_name}': {e}", exc_info=True)
+            logging.error(
+                f"Unexpected error fetching distinct metadata for '{field_name}' from table '{table_name}': {e}",
+                exc_info=True)
             raise RuntimeError(f"Unexpected error while fetching distinct metadata for '{field_name}'.") from e
         finally:
             # Ensure cursor and connection are closed even if errors occur
@@ -344,7 +333,5 @@ class VectorStore:
             if conn:
                 conn.close()
             logging.debug("Direct database connection closed.")
-        # --- End direct connection block ---
 
         return results
-

@@ -1,16 +1,11 @@
-# services/document_service.py
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
-# --- Use your VectorStore ---
 from database.vector_store import VectorStore  # Your custom class
-
-# ---
 
 # --- Initialize YOUR VectorStore ---
 vec = VectorStore()
-# ---
 thread_pool = ThreadPoolExecutor()
 
 

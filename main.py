@@ -11,7 +11,7 @@ app = FastAPI(
         "API for ingesting text documents, chunking, storing with metadata (source_file, created_at), and performing "
         "RAG Q&A with source file filtering."
     ),
-    version="1.2.0",
+    version="1.0.0",
 )
 
 
@@ -21,14 +21,16 @@ async def startup_event():
     print(f"Temporary folder: {TEMP_FOLDER}")
 
 
-@app.post("/ingest/",
-          summary="Ingest a Text Document",
-          description=f"""Upload a text-based document (e.g., .txt, .pdf, .md, .docx).
-          The document will be chunked, embedded, and stored with 'source_file' and 'created_at' metadata.
-          Maximum file size: {MAX_FILE_SIZE_MB} MB.""",
-          response_model=IngestionResponse,
-          status_code=status.HTTP_201_CREATED,
-          tags=["Ingestion"])
+@app.post(
+    "/ingest/",
+    summary="Ingest a Text Document",
+    description=f"""Upload a text-based document (e.g., .txt, .pdf, .md, .docx). 
+    The document will be chunked, embedded, and stored with 'source_file' and 'created_at' metadata. 
+    Maximum file size: {MAX_FILE_SIZE_MB} MB.""",
+    response_model=IngestionResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Ingestion"]
+)
 async def ingest_document_endpoint(file: UploadFile = File(..., description="The document file to ingest.")):
     """
     Handles document ingestion, chunking, and storage.
@@ -40,23 +42,29 @@ async def ingest_document_endpoint(file: UploadFile = File(..., description="The
             return IngestionResponse(**result)  # Return 201 but with 0 chunks added
         elif result["chunks_added"] == 0:
             # Should likely be caught as an error during processing if file wasn't empty
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="File processed but no content chunks were generated or stored.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File processed but no content chunks were generated or stored."
+            )
 
         return IngestionResponse(**result)
     except HTTPException as e:
         raise e  # Re-raise validation, size limit, or processing errors
     except Exception as e:
         print(f"Unexpected error during ingestion endpoint: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="An unexpected error occurred during file ingestion.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred during file ingestion."
+        )
 
 
-@app.get("/documents/",
-         summary="List Ingested Source Files",
-         description="Retrieves a list of unique source filenames from ingested documents, usable for filtering in the '/query/' endpoint.",
-         response_model=DocumentListResponse,
-         tags=["Documents"])
+@app.get(
+    "/documents/",
+    summary="List Ingested Source Files",
+    description="Retrieves a list of unique source filenames from ingested documents, usable for filtering in the '/query/' endpoint.",
+    response_model=DocumentListResponse,
+    tags=["Documents"]
+)
 async def list_documents_endpoint():
     """
     Provides a list of unique 'source_file' values present in the vector store.
@@ -69,15 +77,19 @@ async def list_documents_endpoint():
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     except Exception as e:
         print(f"Unexpected error listing documents: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="An unexpected error occurred while retrieving the document list.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while retrieving the document list."
+        )
 
 
-@app.post("/query/",
-          summary="Ask a Question (RAG)",
-          description="Ask a question based on ingested documents. Optionally filter by 'source_file'.",
-          response_model=QueryResponse,
-          tags=["Q&A"])
+@app.post(
+    "/query/",
+    summary="Ask a Question (RAG)",
+    description="Ask a question based on ingested documents. Optionally filter by 'source_file'.",
+    response_model=QueryResponse,
+    tags=["Q&A"]
+)
 async def query_endpoint(request: QueryRequest = Body(...)):
     """
     Handles user questions using RAG. Filter results using the `source_file` field.

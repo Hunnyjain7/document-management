@@ -11,7 +11,7 @@ class IngestionResponse(BaseModel):
 
 class QueryRequest(BaseModel):
     question: str = Field(..., description="The user's question.")
-    limit: int = Field(default=5, description="Maximum number of relevant chunks to retrieve.")
+    limit: int = Field(default=1, description="Maximum number of relevant chunks to retrieve.")
     # Simplified filter: just the source filename
     source_file: Optional[str] = Field(None,
                                        description="Filter results to only this source file (e.g., 'my_document.pdf').")

@@ -1,23 +1,19 @@
-# services/ingestion_service.py
 import os
 from datetime import datetime
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import pandas as pd  # Import pandas
+import pandas as pd
 from fastapi import UploadFile, HTTPException, status
 from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# --- Use your VectorStore ---
 from database.vector_store import VectorStore  # Your custom class
 from timescale_vector.client import uuid_from_time  # Your specific library
-# ---
 
 from config.settings import TEMP_FOLDER, MAX_FILE_SIZE_BYTES, CHUNK_SIZE, CHUNK_OVERLAP
 
 # --- Initialize YOUR VectorStore ---
 vec = VectorStore()
-# ---
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=CHUNK_SIZE,
@@ -33,7 +29,6 @@ async def run_sync_in_thread(func, *args, **kwargs):
     return await loop.run_in_executor(thread_pool, lambda: func(*args, **kwargs))
 
 
-# save_temp_file_with_limit remains the same as previous version
 async def save_temp_file_with_limit(file: UploadFile) -> tuple[str, str]:
     if not file.filename:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No filename provided.")
@@ -65,7 +60,6 @@ async def save_temp_file_with_limit(file: UploadFile) -> tuple[str, str]:
         await file.close()
 
 
-# _load_and_split remains the same as previous version
 def _load_and_split(file_path: str, source_filename: str):
     print(f"Loading and splitting: {file_path}")
     try:
@@ -127,9 +121,6 @@ def _prepare_and_upsert_chunks(chunks):
         raise ConnectionError(f"Database upsert failed: Check VectorStore logs and DB connection. Error: {e}")
 
 
-# --- End Update ---
-
-# ingest_document remains the same - it calls the updated _prepare_and_upsert_chunks
 async def ingest_document(file: UploadFile):
     file_path = None
     original_filename = "unknown"

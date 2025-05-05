@@ -18,6 +18,12 @@ MAX_FILE_SIZE_BYTES = int(MAX_FILE_SIZE_MB * 1024 * 1024)
 CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', 1000))
 CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', 150))
 
+OLLAMA_CHAT_MODEL = os.getenv('OLLAMA_CHAT_MODEL', 'llama3.1')
+
+# --- Add OpenAI Config ---
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+
 # Ensure the temporary folder exists
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
@@ -56,7 +62,7 @@ class DatabaseSettings(BaseModel):
 class VectorStoreSettings(BaseModel):
     """Settings for the VectorStore."""
 
-    table_name: str = "embeddings"
+    table_name: str = "embeddings1"
     embedding_dimensions: int = 768
     time_partition_interval: timedelta = timedelta(days=7)
 
